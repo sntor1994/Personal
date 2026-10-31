@@ -1,0 +1,52 @@
+name: Fetch Garmin Data
+
+on:
+  schedule:
+    # 毎日 日本時間 07:00 (UTC 22:00)
+    - cron: '0 22 * * *'
+  # GitHub Web画面やAPIから手動実行可能にする
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Fetch Garmin data
+        env:
+          GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+          TZ: Asia/Tokyo
+        run: |
+          python scripts/fetch_garmin.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 取得したデータフォルダのみをステージング
+          git add 70_HealthData/
+
+          # 差分がある場合のみコミット＆プッシュ
+          if git diff --staged --quiet; then
+            echo "No data changes detected. Skipping commit."
+          else
+            git commit -m "chore(garmin): auto-update health and activity data [skip ci]"
+            git push
+          fi
