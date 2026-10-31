@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from garmin_personal_api import (
+    GarminPersonalApiClient,
+    PersonalApiAuthenticator,
+)
+
 # リポジトリルートパスの取得
 ROOT_DIR = Path(__file__).resolve().parents[1]
 JST = ZoneInfo("Asia/Tokyo")
@@ -21,22 +26,7 @@ def save_json(path: Path, data: dict) -> None:
     print(f"  -> Saved: {path.relative_to(ROOT_DIR)}")
 
 
-def init_garmin_client(api_key: str):
-    """Garmin Personal API クライアントを初期化する"""
-    try:
-        from garmin_personal_api import GarminPersonalApiClient
-        return GarminPersonalApiClient(api_key=api_key)
-    except ImportError:
-        try:
-            # 別名モジュール・フォールバック対応
-            from garmin_connect_personal_api import GarminPersonalApiClient
-            return GarminPersonalApiClient(api_key=api_key)
-        except ImportError as e:
-            print("Error: Garmin Personal API client package is not installed.", file=sys.stderr)
-            raise e
-
-
-def fetch_daily_health(client, target_date: datetime.date) -> None:
+def fetch_daily_health(client: GarminPersonalApiClient, target_date: datetime.date) -> None:
     """指定日のデイリー健康データ（睡眠、HRV、心拍、ストレス、Body Battery）を取得・保存"""
     day_str = target_date.isoformat()
     print(f"Collecting Daily Health: {day_str}")
@@ -52,7 +42,7 @@ def fetch_daily_health(client, target_date: datetime.date) -> None:
         "body_battery": None,
     }
 
-    # 各項目ごとに例外を個別キャッチし、一部欠損しても全体を落とさない
+    # 各項目ごとに個別取得し、データが存在しない日があっても全体を継続
     data_fetchers = [
         ("sleep", lambda: client.get_daily_sleep(day_str)),
         ("hrv", lambda: client.get_daily_hrv(day_str)),
@@ -72,23 +62,22 @@ def fetch_daily_health(client, target_date: datetime.date) -> None:
     save_json(output_path, daily_record)
 
 
-def fetch_activities(client, start_date: datetime.date, end_date: datetime.date) -> None:
+def fetch_activities(client: GarminPersonalApiClient, start_date: datetime.date, end_date: datetime.date) -> None:
     """期間内のアクティビティ（ランニング等）を取得・保存"""
     start_str = start_date.isoformat()
     end_str = end_date.isoformat()
     print(f"Collecting Activities: {start_str} to {end_str}")
 
     try:
-        activities = client.get_activities(start_str, end_str)
+        activities = client.search_activities(start_date=start_str, end_date=end_str, limit=50)
     except Exception as e:
-        print(f"  [Warning] Failed to fetch activities: {e}")
+        print(f"  [Warning] Failed to search activities: {e}")
         return
 
     if not activities:
         print("  No activities found in range.")
         return
 
-    # リスト形式で返ってくる想定
     activity_list = activities if isinstance(activities, list) else activities.get("activities", [])
 
     for act in activity_list:
@@ -96,7 +85,7 @@ def fetch_activities(client, start_date: datetime.date, end_date: datetime.date)
         if not activity_id:
             continue
 
-        # プライバシー保護: 位置情報の詳細ポリラインやGPS座標配列は除外（存在する場合）
+        # プライバシー保護: 位置情報の詳細ポリラインやGPS座標配列は除外（サマリー値のみ保存）
         act.pop("geoPolylineDTO", None)
         act.pop("splitSummaries", None)
 
@@ -110,19 +99,26 @@ def main():
         print("Error: Environment variable 'GARMIN_PERSONAL_API_KEY' is not set.", file=sys.stderr)
         sys.exit(1)
 
-    print("Initializing Garmin Personal API client...")
-    client = init_garmin_client(api_key)
+    print("Authenticating with Garmin Personal API...")
+    try:
+        with PersonalApiAuthenticator() as authenticator:
+            token = authenticator.obtain_token(api_key)
+            print(f"Authentication successful (Token expires at: {getattr(token, 'expires_at', 'N/A')})")
+    except Exception as e:
+        print(f"Authentication failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    today = datetime.now(JST).date()
+    with GarminPersonalApiClient(token.access_token) as client:
+        today = datetime.now(JST).date()
 
-    # 1. デイリー健康データ（直近3日間分を取得して同期漏れ・更新を反映）
-    for i in range(3):
-        target_date = today - timedelta(days=i)
-        fetch_daily_health(client, target_date)
+        # 1. デイリー健康データ（直近3日間分を取得して同期漏れを反映）
+        for i in range(3):
+            target_date = today - timedelta(days=i)
+            fetch_daily_health(client, target_date)
 
-    # 2. アクティビティデータ（直近7日間分を取得）
-    activity_start_date = today - timedelta(days=7)
-    fetch_activities(client, activity_start_date, today)
+        # 2. アクティビティデータ（直近7日間分を取得）
+        activity_start_date = today - timedelta(days=7)
+        fetch_activities(client, activity_start_date, today)
 
     print("Garmin data collection completed successfully.")
 
