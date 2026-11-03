@@ -101,11 +101,11 @@
   "endTimeGMT": "2026-10-30 22:52:48",
   "qualifyingDive": false,
   "activityUUID": "8e9a9c24-1cb5-4314-a19c-c7345d360ad5",
-  "autoCalcCalories": false,
-  "favorite": false,
-  "elevationCorrected": false,
   "decoDive": false,
   "pr": false,
+  "autoCalcCalories": false,
+  "elevationCorrected": false,
   "manualActivity": false,
-  "parent": false
+  "parent": false,
+  "favorite": false
 }
