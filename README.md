@@ -58,14 +58,16 @@ Personal/
 
 ```mermaid
 flowchart LR
-    A["① 日々の記録<br>(DailyLog / HealthData)"] --> B["② AIによる分析<br>(ChatGPT / Copilot)"]
+    A["① 日々の記録<br>(GitHub Issue / DailyLog / HealthData)"] --> B["② AIによる分析<br>(ChatGPT / Copilot)"]
     B --> C["③ 思考・問いの深掘り<br>(Review / 改善策の検討)"]
     C --> D["④ リポジトリへの反映<br>(Review / Goals / Vision)"]
     D --> A
 ```
 
 ### 1. 日常（Daily）
-- スマホやPCから、その日の出来事・感情・気づきを `40_DailyLog/` に記録（テキストまたは音声入力）。
+- スマホやPCから、その日の出来事・感情・気づきを記録。
+  - **GitHub Issue**: 外出先やスマホ（GitHub Mobile等）から手軽にIssue作成・コメントで思考をメモ。毎晩自動集約されます。
+  - **DailyLog直接入力**: `40_DailyLog/` への直接テキスト・音声入力も併用可能。
 - 必要に応じてChatGPTに共有し、「気づき」「過去ログや価値観との関連性」「簡単な問い」のフィードバックを受ける。
 
 ### 2. 週次（Weekly Review）
@@ -77,6 +79,15 @@ flowchart LR
 - 中長期視点での振り返り。
 - 「維持すること」「改善すること」「やめること（価値観に合わない行動の削ぎ落とし）」を整理。
 - 必要に応じて `10_Goals/` や `00_Vision/` の整合性を点検し、更新案を検討する。
+
+---
+
+## ⚙️ 自動化（GitHub Actions）
+
+| ワークフロー | スケジュール | 概要 | 保存先 |
+| :--- | :--- | :--- | :--- |
+| **Daily Issue Aggregation** | 毎日 00:30 JST | 前日作成されたGitHub Issue（本文・ラベル・全コメント）を集約<br>※ `ongoing` などの除外ラベルが付いた継続型Issueは自動除外 | `40_DailyLog/{YYYY}/{YYYY-MM-DD}.md` |
+| **Fetch Garmin Data** | 毎日 07:00 JST | Garmin Connectから前日のヘルスケア＆アクティビティログを取得 | `70_HealthData/` |
 
 ---
 

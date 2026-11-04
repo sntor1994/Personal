@@ -1,0 +1,57 @@
+name: Daily Issue Aggregation
+
+on:
+  schedule:
+    # 毎日 00:30 JST（15:30 UTC）
+    - cron: '30 15 * * *'
+
+  # 手動実行にも対応
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: '集約対象日（YYYY-MM-DD、省略時は前日JST）'
+        required: false
+        type: string
+
+permissions:
+  issues: read
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Aggregate daily issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_DATE: ${{ inputs.target_date }}
+          TZ: Asia/Tokyo
+          # 継続更新型・集約除外ラベル（カンマ区切り、大文字小文字不問）
+          EXCLUDE_LABELS: "ongoing,persistent,常設,継続更新,集約除外,exclude-daily"
+        run: |
+          python scripts/aggregate_daily_issues.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # 集約結果の保存先フォルダのみをステージング
+          git add 40_DailyLog/
+
+          if git diff --staged --quiet; then
+            echo "No changes detected in 40_DailyLog. Skipping commit."
+          else
+            git commit -m "chore(issues): aggregate daily issues for ${TARGET_DATE:-yesterday} [skip ci]"
+            git push
+          fi
