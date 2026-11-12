@@ -1,6 +1,6 @@
 {
   "date": "2026-11-10",
-  "fetched_at": "2026-11-11T10:41:37.496227+09:00",
+  "fetched_at": "2026-11-12T11:40:10.972181+09:00",
   "sleep": {
     "id": 1794229522000,
     "userProfilePK": 66475351,
@@ -25,12 +25,6 @@
     "deviceRemCapable": true,
     "retro": false,
     "sleepFromDevice": true,
-    "averageSpO2Value": null,
-    "lowestSpO2Value": null,
-    "highestSpO2Value": null,
-    "numberOfEventsBelowThreshold": null,
-    "averageSpO2HRSleep": null,
-    "spo2Threshold": null,
     "averageRespirationValue": 15.0,
     "lowestRespirationValue": 10.0,
     "highestRespirationValue": 21.0,
@@ -91,7 +85,6 @@
         "idealEndInSeconds": 8771.4
       }
     },
-    "userNote": null,
     "sleepVersion": 2,
     "sleepNeed": {
       "userProfilePk": 66475351,
@@ -122,8 +115,7 @@
       "napAdjustment": "NO_CHANGE",
       "displayedForTheDay": true,
       "preferredActivityTracker": true
-    },
-    "sleepAlignment": null
+    }
   },
   "hrv": {
     "userProfilePk": 66475351,
@@ -614,16 +606,6 @@
     "minHeartRate": 47,
     "restingHeartRate": 49,
     "lastSevenDaysAvgRestingHeartRate": 48,
-    "heartRateValueDescriptors": [
-      {
-        "index": 0,
-        "key": "timestamp"
-      },
-      {
-        "index": 1,
-        "key": "heartrate"
-      }
-    ],
     "heartRateValues": [
       [
         1794236400000,
@@ -3461,6 +3443,16 @@
         1794322680000,
         50
       ]
+    ],
+    "heartRateValueDescriptors": [
+      {
+        "index": 0,
+        "key": "timestamp"
+      },
+      {
+        "index": 1,
+        "key": "heartrate"
+      }
     ]
   },
   "daily_summary": {
