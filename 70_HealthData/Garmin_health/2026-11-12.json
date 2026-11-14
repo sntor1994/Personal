@@ -1,6 +1,6 @@
 {
   "date": "2026-11-12",
-  "fetched_at": "2026-11-13T11:21:32.907326+09:00",
+  "fetched_at": "2026-11-14T10:57:09.171812+09:00",
   "sleep": {
     "id": 1794403374000,
     "userProfilePK": 66475351,
@@ -601,6 +601,16 @@
     "minHeartRate": 48,
     "restingHeartRate": 50,
     "lastSevenDaysAvgRestingHeartRate": 49,
+    "heartRateValueDescriptors": [
+      {
+        "index": 0,
+        "key": "timestamp"
+      },
+      {
+        "index": 1,
+        "key": "heartrate"
+      }
+    ],
     "heartRateValues": [
       [
         1794409200000,
@@ -3470,16 +3480,6 @@
         1794495480000,
         52
       ]
-    ],
-    "heartRateValueDescriptors": [
-      {
-        "index": 0,
-        "key": "timestamp"
-      },
-      {
-        "index": 1,
-        "key": "heartrate"
-      }
     ]
   },
   "daily_summary": {
